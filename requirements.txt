@@ -1,0 +1,9 @@
+numpy
+pandas
+gym[box2d]
+ray[tune]
+opencv-python
+dm-tree
+lz4
+requests
+tensorflow
