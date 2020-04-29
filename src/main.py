@@ -3,8 +3,7 @@ import os
 import time
 import ray
 from ray import tune
-from ray.rllib.agents import dqn
-from ray.rllib.agents import ppo
+from ray.rllib.agents import dqn, ppo
 
 from environment.LunarLanderEnvironment import LunarLanderEnvironment
 

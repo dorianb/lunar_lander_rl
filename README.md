@@ -1,7 +1,6 @@
-# Reinforcement Learning applied to Lunar Lander
-A lunar lander game played by Reinforcement Learning Agent
+# Reinforcement Learning toolkit
 
-Python 3.5 has been chosen to ensure components compatibility. The project is structured using Distutils as a build 
+Python 3.7 has been chosen to ensure components compatibility. The project is structured using Distutils as a build 
 automation tool. Test are implemented for each module using unittest.
 
 ## Installation procedure
