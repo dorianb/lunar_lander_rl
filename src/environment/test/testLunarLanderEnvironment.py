@@ -7,11 +7,14 @@ from environment.LunarLanderEnvironment import LunarLanderEnvironment
 class LunarLanderEnvironmentTestCase(unittest.TestCase):
 
     def test_init(self):
-        env = LunarLanderEnvironment({})
+        env = LunarLanderEnvironment(False, {})
+        self.assertIsNotNone(env)
+
+        env = LunarLanderEnvironment(True, {})
         self.assertIsNotNone(env)
 
     def test_random_action(self):
-        env = LunarLanderEnvironment({})
+        env = LunarLanderEnvironment(False, {})
         env.reset()
         for _ in range(200):
             env.render()
@@ -19,14 +22,13 @@ class LunarLanderEnvironmentTestCase(unittest.TestCase):
             time.sleep(0.01)
         env.close()
 
-    def test_render(self):
-        pass
-
-    def test_reset(self):
-        pass
-
-    def test_step(self):
-        pass
+        env = LunarLanderEnvironment(True, {})
+        env.reset()
+        for _ in range(200):
+            env.render()
+            env.step(env.action_space.sample())
+            time.sleep(0.01)
+        env.close()
 
 if __name__ == '__main__':
     unittest.main()

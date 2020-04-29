@@ -5,10 +5,10 @@ import ray
 from ray import tune
 from ray.rllib.agents import dqn, ppo
 
-from environment.LunarLanderEnvironment import LunarLanderEnvironment
+from environment.Environment import Environment
 
 
-parser = argparse.ArgumentParser(description='Lunar lander RL')
+parser = argparse.ArgumentParser(description='RL toolkit')
 parser.add_argument('--environment', type=str, help="Environment", default="LunarLander-v2")
 parser.add_argument('--checkpoint-path', type=str, help="Path to checkpoint", default="")
 parser.add_argument('--mode', type=str, help='Mode', default="train",
@@ -17,6 +17,8 @@ args = parser.parse_args()
 
 ray.init()
 
+env = Environment(args.environment)
+
 if args.mode == "train":
 
     tune.run(
@@ -24,14 +26,14 @@ if args.mode == "train":
         name="DQN",
         stop={"episode_reward_mean": 200},
         config={
-            "env": args.environment,
+            "env": env.__class__,
             "num_gpus": 0,
             "num_workers": 1,
             #"lr": tune.grid_search([0.01, 0.001, 0.0001]),
             "eager": False,
             "monitor": True
         },
-        local_dir="~/workspace/lunar_lander_rl/results",
+        local_dir="~/workspace/RL_toolkit/results",
         trial_name_creator=lambda x: "trial",
         checkpoint_freq=10,
         checkpoint_at_end=True
@@ -39,11 +41,9 @@ if args.mode == "train":
 
 elif args.mode == "infer":
 
-    env = LunarLanderEnvironment({})
-
     config = dqn.DEFAULT_CONFIG.copy()
     config["explore"] = False
-    agent = dqn.DQNTrainer(env=LunarLanderEnvironment, config=config)
+    agent = dqn.DQNTrainer(env=env.__class__, config=config)
     assert os.path.exists(args.checkpoint_path), "Checkpoint path {} is invalid".format(args.checkpoint_path)
     print("Restoring from checkpoint path", args.checkpoint_path)
     agent.restore(args.checkpoint_path)

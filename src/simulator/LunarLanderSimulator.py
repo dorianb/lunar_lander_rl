@@ -180,7 +180,6 @@ class LunarLanderSimulator(gym.Env, EzPickle):
 
         self.drawlist = [self.lander] + self.legs
 
-        self.step(np.array([0,0]) if self.continuous else 0)
 
     def _create_particle(self, mass, x, y, ttl):
         p = self.world.CreateDynamicBody(
@@ -210,37 +209,37 @@ class LunarLanderSimulator(gym.Env, EzPickle):
         side = (-tip[1], tip[0])
         dispersion = [self.np_random.uniform(-1.0, +1.0) / SCALE for _ in range(2)]
 
-        m_power = 0.0
+        self.m_power = 0.0
         if (self.continuous and action[0] > 0.0) or (not self.continuous and action==2):
             # Main engine
             if self.continuous:
-                m_power = (np.clip(action[0], 0.0,1.0) + 1.0)*0.5   # 0.5..1.0
-                assert m_power>=0.5 and m_power <= 1.0
+                self.m_power = (np.clip(action[0], 0.0,1.0) + 1.0)*0.5   # 0.5..1.0
+                assert self.m_power>=0.5 and self.m_power <= 1.0
             else:
-                m_power = 1.0
+                self.m_power = 1.0
             ox =  tip[0]*(4/SCALE + 2*dispersion[0]) + side[0]*dispersion[1]   # 4 is move a bit downwards, +-2 for randomness
             oy = -tip[1]*(4/SCALE + 2*dispersion[0]) - side[1]*dispersion[1]
             impulse_pos = (self.lander.position[0] + ox, self.lander.position[1] + oy)
-            p = self._create_particle(3.5, impulse_pos[0], impulse_pos[1], m_power)    # particles are just a decoration, 3.5 is here to make particle speed adequate
-            p.ApplyLinearImpulse(           ( ox*MAIN_ENGINE_POWER*m_power,  oy*MAIN_ENGINE_POWER*m_power), impulse_pos, True)
-            self.lander.ApplyLinearImpulse( (-ox*MAIN_ENGINE_POWER*m_power, -oy*MAIN_ENGINE_POWER*m_power), impulse_pos, True)
+            p = self._create_particle(3.5, impulse_pos[0], impulse_pos[1], self.m_power)    # particles are just a decoration, 3.5 is here to make particle speed adequate
+            p.ApplyLinearImpulse(           ( ox*MAIN_ENGINE_POWER*self.m_power,  oy*MAIN_ENGINE_POWER*self.m_power), impulse_pos, True)
+            self.lander.ApplyLinearImpulse( (-ox*MAIN_ENGINE_POWER*self.m_power, -oy*MAIN_ENGINE_POWER*self.m_power), impulse_pos, True)
 
-        s_power = 0.0
+        self.s_power = 0.0
         if (self.continuous and np.abs(action[1]) > 0.5) or (not self.continuous and action in [1,3]):
             # Orientation engines
             if self.continuous:
                 direction = np.sign(action[1])
-                s_power = np.clip(np.abs(action[1]), 0.5,1.0)
-                assert s_power>=0.5 and s_power <= 1.0
+                self.s_power = np.clip(np.abs(action[1]), 0.5,1.0)
+                assert self.s_power>=0.5 and self.s_power <= 1.0
             else:
                 direction = action-2
-                s_power = 1.0
+                self.s_power = 1.0
             ox =  tip[0]*dispersion[0] + side[0]*(3*dispersion[1]+direction*SIDE_ENGINE_AWAY/SCALE)
             oy = -tip[1]*dispersion[0] - side[1]*(3*dispersion[1]+direction*SIDE_ENGINE_AWAY/SCALE)
             impulse_pos = (self.lander.position[0] + ox - tip[0]*17/SCALE, self.lander.position[1] + oy + tip[1]*SIDE_ENGINE_HEIGHT/SCALE)
-            p = self._create_particle(0.7, impulse_pos[0], impulse_pos[1], s_power)
-            p.ApplyLinearImpulse(           ( ox*SIDE_ENGINE_POWER*s_power,  oy*SIDE_ENGINE_POWER*s_power), impulse_pos, True)
-            self.lander.ApplyLinearImpulse( (-ox*SIDE_ENGINE_POWER*s_power, -oy*SIDE_ENGINE_POWER*s_power), impulse_pos, True)
+            p = self._create_particle(0.7, impulse_pos[0], impulse_pos[1], self.s_power)
+            p.ApplyLinearImpulse(           ( ox*SIDE_ENGINE_POWER*self.s_power,  oy*SIDE_ENGINE_POWER*self.s_power), impulse_pos, True)
+            self.lander.ApplyLinearImpulse( (-ox*SIDE_ENGINE_POWER*self.s_power, -oy*SIDE_ENGINE_POWER*self.s_power), impulse_pos, True)
 
         self.world.Step(1.0/FPS, 6*30, 2*30)
 
@@ -285,3 +284,35 @@ class LunarLanderSimulator(gym.Env, EzPickle):
         if self.viewer is not None:
             self.viewer.close()
             self.viewer = None
+
+    def is_lander_awake(self):
+        return self.lander.awake
+
+    def get_lander_position(self):
+        pos = self.lander.position
+        return {
+            "x": (pos.x - VIEWPORT_W/SCALE/2) / (VIEWPORT_W/SCALE/2),
+            "y": (pos.y - (self.helipad_y+LEG_DOWN/SCALE)) / (VIEWPORT_H/SCALE/2)
+        }
+
+    def get_lander_velocity(self):
+        vel = self.lander.linearVelocity
+        return {
+            "x": vel.x*(VIEWPORT_W/SCALE/2)/FPS,
+            "y": vel.y*(VIEWPORT_H/SCALE/2)/FPS
+        }
+
+    def get_lander_angle(self):
+        return self.lander.angle
+
+    def get_lander_angular_velocity(self):
+        return 20.0*self.lander.angularVelocity/FPS
+
+    def get_lander_leg_contact(self):
+        return [self.legs[0].ground_contact, self.legs[1].ground_contact]
+
+    def get_lander_main_power(self):
+        return self.m_power
+
+    def get_lander_side_power(self):
+        return self.s_power
