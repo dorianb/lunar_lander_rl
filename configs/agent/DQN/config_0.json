@@ -1,0 +1,45 @@
+{
+    "agent": "DQN",
+
+    "num_atoms": 1,
+    "v_min": -10.0,
+    "v_max": 10.0,
+    "noisy": 0,
+    "sigma0": 0.5,
+    "dueling": 1,
+    "hiddens": [256],
+    "double_q": 1,
+    "n_step": 1,
+
+    "explore": 1,
+    "exploration_config": {
+        "type": "EpsilonGreedy",
+        "initial_epsilon": 1.0,
+        "final_epsilon": 0.02,
+        "epsilon_timesteps": 10000
+    },
+
+    "evaluation_interval": 10,
+    "evaluation_num_episodes": 10,
+    "evaluation_config": {
+        "explore": 0
+    },
+
+    "timesteps_per_iteration": 1000,
+    "target_network_update_freq": 500,
+    "buffer_size": 50000,
+    "prioritized_replay": 1,
+    "prioritized_replay_alpha": 0.6,
+    "prioritized_replay_beta": 0.4,
+    "final_prioritized_replay_beta": 0.4,
+    "prioritized_replay_beta_annealing_timesteps": 20000,
+    "prioritized_replay_eps": 1e-6,
+    "compress_observations": 0,
+
+    "lr": 5e-4,
+    "adam_epsilon": 1e-8,
+    "learning_starts": 1000,
+    "rollout_fragment_length": 4,
+
+    "train_batch_size": 32
+}

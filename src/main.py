@@ -1,38 +1,50 @@
 import argparse
 import os
+import json
 import time
 import ray
 from ray import tune
-from ray.rllib.agents import dqn, ppo
 
 from environment.Environment import Environment
+from agent.Agent import Agent
 
 
 parser = argparse.ArgumentParser(description='RL toolkit')
-parser.add_argument('--environment', type=str, help="Environment", default="LunarLander-v2")
+parser.add_argument('--agent-config-path', type=str, help="Path to the agent configuration", default="")
+parser.add_argument('--environment-config-path', type=str, help="Path to the environment configuration", default="")
 parser.add_argument('--checkpoint-path', type=str, help="Path to checkpoint", default="")
-parser.add_argument('--mode', type=str, help='Mode', default="train",
-                    choices=["train", "infer"])
+parser.add_argument('--mode', type=str, help='Mode', default="train", choices=["train", "infer"])
 args = parser.parse_args()
 
 ray.init()
 
-env = Environment(args.environment)
+config = {}
+
+with open(args.agent_config_path) as config_file:
+    config.update(json.load(config_file))
+
+with open(args.environment_config_path) as config_file:
+    config.update(json.load(config_file))
+
+env = Environment(config)
+agent = Agent(config)
 
 if args.mode == "train":
 
+    config.update({
+
+        "num_gpus": 0,
+        "num_workers": 1,
+
+        "eager": False,
+        "monitor": False
+    })
+
     tune.run(
-        dqn.DQNTrainer,
-        name="DQN",
+        agent.__class__,
+        name=env.__class__.__name__+"_"+agent.__class__.__name__,
         stop={"episode_reward_mean": 200},
-        config={
-            "env": env.__class__,
-            "num_gpus": 0,
-            "num_workers": 1,
-            #"lr": tune.grid_search([0.01, 0.001, 0.0001]),
-            "eager": False,
-            "monitor": True
-        },
+        config=config,
         local_dir="~/workspace/RL_toolkit/results",
         trial_name_creator=lambda x: "trial",
         checkpoint_freq=10,
@@ -41,9 +53,8 @@ if args.mode == "train":
 
 elif args.mode == "infer":
 
-    config = dqn.DEFAULT_CONFIG.copy()
     config["explore"] = False
-    agent = dqn.DQNTrainer(env=env.__class__, config=config)
+
     assert os.path.exists(args.checkpoint_path), "Checkpoint path {} is invalid".format(args.checkpoint_path)
     print("Restoring from checkpoint path", args.checkpoint_path)
     agent.restore(args.checkpoint_path)

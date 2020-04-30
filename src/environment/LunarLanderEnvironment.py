@@ -7,7 +7,9 @@ from simulator.LunarLanderSimulator import LunarLanderSimulator
 
 class LunarLanderEnvironment(gym.Env):
 
-    def __init__(self, continuous, env_config):
+    def __init__(self, env_config):
+        self.env_config = env_config
+        continuous = env_config["continuous"] if "continuous" in env_config else False
         self.simulator = LunarLanderSimulator(continuous)
 
         self.prev_reward = None
@@ -69,7 +71,7 @@ class LunarLanderEnvironment(gym.Env):
             - 100 * np.sqrt(state[0] * state[0] + state[1] * state[1]) \
             - 100 * np.sqrt(state[2] * state[2] + state[3] * state[3]) \
             - 100 * abs(state[4]) + 10 * state[6] + 10 * state[7]  # And ten points for legs contact, the idea is if you
-        # lose contact again after landing, you get negative reward
+                                                                   # lose contact again after landing, you get negative reward
         if self.prev_shaping is not None:
             reward = shaping - self.prev_shaping
         self.prev_shaping = shaping
