@@ -4,10 +4,12 @@ setup(
     name='RL_toolkit',
     version='1.0',
     packages=[
+        'agent',
         'environment',
         'simulator'
     ],
     package_dir={
+        'agent': 'src/agent',
         'environment': 'src/environment',
         'simulator': 'src/simulator'
     },

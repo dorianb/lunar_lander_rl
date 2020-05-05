@@ -6,6 +6,9 @@
 # Landing pad is always at coordinates (0,0). Coordinates are the first two numbers in state vector.
 # Landing outside landing pad is possible.
 
+# Added randomness in landing pad position
+# Add fuel tank
+
 import math
 import numpy as np
 
@@ -101,14 +104,15 @@ class LunarLanderSimulator(gym.Env, EzPickle):
         CHUNKS = 11
         height = self.np_random.uniform(0, H/2, size=(CHUNKS+1,) )
         chunk_x  = [W/(CHUNKS-1)*i for i in range(CHUNKS)]
-        self.helipad_x1 = chunk_x[CHUNKS//2-1]
-        self.helipad_x2 = chunk_x[CHUNKS//2+1]
-        self.helipad_y  = H/4
-        height[CHUNKS//2-2] = self.helipad_y
-        height[CHUNKS//2-1] = self.helipad_y
-        height[CHUNKS//2+0] = self.helipad_y
-        height[CHUNKS//2+1] = self.helipad_y
-        height[CHUNKS//2+2] = self.helipad_y
+        landing_pad_chunk = self.np_random.randint(2, high=CHUNKS-2, size=1)[0]
+        self.helipad_x1 = chunk_x[landing_pad_chunk-1]
+        self.helipad_x2 = chunk_x[landing_pad_chunk+1]
+        self.helipad_y = self.np_random.uniform(0, H/3, size=1)[0]
+        height[landing_pad_chunk-2] = self.helipad_y
+        height[landing_pad_chunk-1] = self.helipad_y
+        height[landing_pad_chunk+0] = self.helipad_y
+        height[landing_pad_chunk+1] = self.helipad_y
+        height[landing_pad_chunk+2] = self.helipad_y
         smooth_y = [0.33*(height[i-1] + height[i+0] + height[i+1]) for i in range(CHUNKS)]
 
         self.moon = self.world.CreateStaticBody( shapes=edgeShape(vertices=[(0, 0), (W, 0)]) )
@@ -316,3 +320,9 @@ class LunarLanderSimulator(gym.Env, EzPickle):
 
     def get_lander_side_power(self):
         return self.s_power
+
+    def get_landing_pad_position(self):
+        return {"x": self.helipad_x1, "y": self.helipad_y}, {"x": self.helipad_x2, "y": self.helipad_y}
+
+    def get_fuel_level(self):
+        pass

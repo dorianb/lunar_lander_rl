@@ -9,8 +9,7 @@ class LunarLanderEnvironment(gym.Env):
 
     def __init__(self, env_config):
         self.env_config = env_config
-        continuous = env_config["continuous"] if "continuous" in env_config else False
-        self.simulator = LunarLanderSimulator(continuous)
+        self.simulator = LunarLanderSimulator(self.env_config["continuous"])
 
         self.prev_reward = None
 
@@ -45,7 +44,7 @@ class LunarLanderEnvironment(gym.Env):
 
         self.simulator.step(action)
 
-        is_awake = self.simulator.is_lander_awake()
+        helipad1, helipad2 = self.simulator.get_landing_pad_position()
         pos = self.simulator.get_lander_position()
         vel = self.simulator.get_lander_velocity()
         angle = self.simulator.get_lander_angle()
@@ -62,7 +61,11 @@ class LunarLanderEnvironment(gym.Env):
             angle,
             angular_vel,
             1.0 if leg_contact[0] else 0.0,
-            1.0 if leg_contact[1] else 0.0
+            1.0 if leg_contact[1] else 0.0,
+            helipad1["x"],
+            helipad1["y"],
+            helipad2["x"],
+            helipad2["y"]
         ]
         assert len(state) == 8
 
@@ -83,10 +86,14 @@ class LunarLanderEnvironment(gym.Env):
         if self.simulator.game_over or abs(state[0]) >= 1.0:
             done = True
             reward = -100
-        if not is_awake:
+        if not self.simulator.is_lander_awake() and self.on_landing_pad(pos, helipad1, helipad2):
             done = True
             reward = +100
         return np.array(state, dtype=np.float32), reward, done, {}
 
     def close(self):
         self.simulator.close()
+
+    @staticmethod
+    def on_landing_pad(pos, helipad1, helipad2):
+        return pos["x"] > helipad1["x"] and pos["x"] < helipad2["x"]

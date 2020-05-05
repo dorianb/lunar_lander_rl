@@ -22,6 +22,7 @@ config = {}
 
 with open(args.agent_config_path) as config_file:
     config.update(json.load(config_file))
+    config["explore"] = True if args.mode == "train" else False
 
 with open(args.environment_config_path) as config_file:
     config.update(json.load(config_file))
@@ -53,8 +54,6 @@ if args.mode == "train":
 
 elif args.mode == "infer":
 
-    config["explore"] = False
-
     assert os.path.exists(args.checkpoint_path), "Checkpoint path {} is invalid".format(args.checkpoint_path)
     print("Restoring from checkpoint path", args.checkpoint_path)
     agent.restore(args.checkpoint_path)
@@ -73,4 +72,3 @@ elif args.mode == "infer":
         rewards += reward
 
     print("Reward = {}".format(rewards))
-
