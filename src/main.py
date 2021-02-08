@@ -37,16 +37,15 @@ if args.mode == "train":
         "num_gpus": 0,
         "num_workers": 1,
 
-        "eager": False,
         "monitor": False
     })
 
     tune.run(
         agent.__class__,
         name=env.__class__.__name__+"_"+agent.__class__.__name__,
-        stop={"episode_reward_mean": 200},
+        stop={"episode_reward_mean": -100},
         config=config,
-        local_dir="~/workspace/RL_toolkit/results",
+        local_dir="../results",
         trial_name_creator=lambda x: "trial",
         checkpoint_freq=10,
         checkpoint_at_end=True

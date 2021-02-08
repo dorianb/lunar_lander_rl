@@ -3,6 +3,6 @@
   "horizon": 1000,
   "env": "LunarLander",
   "env_config": {
-      "continuous": 0
+      "continuous": false
   }
 }

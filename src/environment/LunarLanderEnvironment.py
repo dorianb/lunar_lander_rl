@@ -14,7 +14,7 @@ class LunarLanderEnvironment(gym.Env):
         self.prev_reward = None
 
         # useful range is -1 .. +1, but spikes can be higher
-        self.observation_space = spaces.Box(-np.inf, np.inf, shape=(8,), dtype=np.float32)
+        self.observation_space = spaces.Box(-np.inf, np.inf, shape=(12,), dtype=np.float32)
 
         if self.simulator.continuous:
             # Action is two floats [main engine, left-right engines].
@@ -67,7 +67,7 @@ class LunarLanderEnvironment(gym.Env):
             helipad2["x"],
             helipad2["y"]
         ]
-        assert len(state) == 8
+        assert len(state) == 12
 
         reward = 0
         shaping = \
